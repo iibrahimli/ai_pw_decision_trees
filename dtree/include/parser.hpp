@@ -4,7 +4,8 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <iomanip>
+#include <set>
+#include <tuple>
 
 #include "cls_sample.hpp"
 
@@ -12,8 +13,19 @@
 namespace dt {
 
 
-template <std::size_t n_feat, typename feat_t>
-using dataset = std::vector<cls_sample>;
+// utility function to trim a string
+std::string trim(const std::string & str) {
+
+    std::size_t first = str.find_first_not_of(' ');
+    
+    if(first == std::string::npos)
+        return str;
+    
+    std::size_t last = str.find_last_not_of(' ');
+    
+    return str.substr(first, (last - first + 1));
+}
+
 
 
 /*
@@ -21,24 +33,75 @@ using dataset = std::vector<cls_sample>;
 */
 class parser {
 
-private:
-
-
-
-
 public:
 
     // default constructor
     parser() = default;
 
 
-    // filename must be csv (no checks though)
-    // parser(const std::string & filename);
-
-
     // parse csv file
+    // provide dataset format using template arguments
     // ignore_first_col: pass true if the csv contains column names in the first row
-    dataset parse_csv(const std::string & filename, bool ignore_first_col = false);
+    // returns the vector of samples and map from class id to class name (string) for the dataset
+    template <typename feat_t, std::size_t n_feat>
+    std::tuple<std::vector<cls_sample<feat_t, n_feat>>, label_map>
+    parse_csv(const std::string & filename, char delim = ',', bool ignore_first_col = false){
+        
+        std::ifstream                            infile(filename);
+        std::string                              line;
+        std::string                              cell;
+        std::istringstream                       line_ss;
+        std::istringstream                       cell_ss;
+        std::string                              label;
+        unsigned int                             label_id;
+        std::size_t                              line_n = 0;
+        std::set<std::string>                    label_set;
+        unsigned int                             max_label_id = 0;
+
+        std::array<feat_t, n_feat>               feats;
+        std::vector<cls_sample<feat_t, n_feat>>  dataset;
+        label_map                                dict;
+        
+        if(!infile)
+            throw std::runtime_error("Couldn't open file");
+
+        while(std::getline(infile, line)){
+
+            line_ss.str(line);
+
+            // parse features
+            for(std::size_t cell_n = 0; cell_n < n_feat; ++cell_n){
+
+                if(!line_ss)
+                    throw std::runtime_error("Unexpected end of line");
+                
+                std::getline(line_ss, cell, delim);
+
+                // parse cell
+                cell_ss.str(cell);
+                cell_ss >> feats[cell_n];
+                cell_ss.clear();
+            }
+
+            // parse label
+            if(!line_ss)
+                throw std::runtime_error("Unexpected end of line");
+            
+            line_ss >> label;
+
+            // add new label if its not in the seen labels set
+            if(label_set.find(label) == label_set.end()){
+                dict[max_label_id++] = label;
+                label_set.insert(label);
+            }
+            
+            dataset.emplace_back(feats, label_id);
+            ++line_n;
+            line_ss.clear();
+        }
+
+        return {dataset, dict};
+    }
 
 };
 
