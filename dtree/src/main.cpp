@@ -1,18 +1,15 @@
 #include <string>
 #include <iostream>
 #include <iomanip>
+#include <chrono>
 
 #include "parser.hpp"
 #include "dtree.hpp"
 
 #define N_ARGS 1
 
-
-using std::cout;
-using std::endl;
-using dt::cls_sample;
-using dt::parser;
-// using dt::dtree;
+using namespace std;
+using namespace dt;
 
 
 int main(int argc, char * argv[]){
@@ -24,11 +21,19 @@ int main(int argc, char * argv[]){
 
     std::string data_filename = argv[1];
 
+    auto t1 = std::chrono::high_resolution_clock::now();
+
     parser ps;
     auto [dataset, id_to_label] = ps.parse_csv<float, 4>(data_filename);
 
+    auto t2 = std::chrono::high_resolution_clock::now();
+
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+
     // print class labels
     for(auto [id, name] : id_to_label) cout << id << ": " << name << endl;
+
+    cout << endl << dataset.size() << " samples parsed in " << fixed << setprecision(2) << (float) duration / 1000 << " ms" << endl;
 
     return 0;
 }
