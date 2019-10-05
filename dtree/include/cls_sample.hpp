@@ -34,15 +34,19 @@ struct cls_sample {
     cls_sample()
         :   _features{0},
             _label_id{0}
-    {
-    }
+    {}
 
 
     // brace initializer list
     cls_sample(std::array<feat_t, n_feat> features, unsigned int label_id)
         :   _features{features},
             _label_id{label_id}
-    {
+    {}
+
+
+    // for ease of use of vector of samples like a matrix
+    feat_t & operator [](std::size_t index){
+        return _features.at(index);
     }
 
 

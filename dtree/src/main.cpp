@@ -25,10 +25,10 @@ int main(int argc, char * argv[]){
     std::string data_filename = argv[1];
 
     parser ps;
-    auto [dataset, dict] = ps.parse_csv<float, 4>(data_filename);
+    auto [dataset, id_to_label] = ps.parse_csv<float, 4>(data_filename);
 
     // print class labels
-    for(auto [id, name] : dict) cout << id << ": " << name << endl;
+    for(auto [id, name] : id_to_label) cout << id << ": " << name << endl;
 
     return 0;
 }
