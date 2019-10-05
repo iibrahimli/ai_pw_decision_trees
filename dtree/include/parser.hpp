@@ -4,7 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <set>
+#include <map>
 #include <tuple>
 
 #include "cls_sample.hpp"
@@ -40,7 +40,7 @@ public:
         std::string                              label;
         unsigned int                             label_id;
         std::size_t                              line_n = 0;
-        std::set<std::string>                    label_set;
+        std::map<std::string, unsigned int>      label_to_id;
         unsigned int                             max_label_id = 0;
 
         std::array<feat_t, n_feat>               feats;
@@ -75,9 +75,14 @@ public:
             line_ss >> label;
 
             // add new label if its not in the seen labels set
-            if(label_set.find(label) == label_set.end()){
-                dict[max_label_id++] = label;
-                label_set.insert(label);
+            if(label_to_id.find(label) == label_to_id.end()){
+                label_id = max_label_id;
+                dict[max_label_id] = label;
+                label_to_id.insert({label, max_label_id});
+                ++max_label_id;
+            }
+            else{
+                label_id = label_to_id[label];
             }
             
             dataset.emplace_back(feats, label_id);
