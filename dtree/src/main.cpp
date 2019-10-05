@@ -1,18 +1,34 @@
 #include <string>
 #include <iostream>
-#include <fstream>
+#include <iomanip>
+
 #include "parser.hpp"
 #include "dtree.hpp"
 
+#define N_ARGS 1
 
+
+using std::cout;
+using std::endl;
 using dt::cls_sample;
 using dt::parser;
-using dt::dtree;
+// using dt::dtree;
 
 
-int main(){
+int main(int argc, char * argv[]){
 
-    
+    if(argc != N_ARGS + 1){
+        cout << "Usage: " << argv[0] << " path/to/data_file.csv" << endl;
+        return 1;
+    }
+
+    std::string data_filename = argv[1];
+
+    parser ps;
+    auto [dataset, dict] = ps.parse_csv<float, 4>(data_filename);
+
+    // print class labels
+    for(auto [id, name] : dict) cout << id << ": " << name << endl;
 
     return 0;
 }
