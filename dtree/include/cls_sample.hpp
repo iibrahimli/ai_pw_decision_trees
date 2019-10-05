@@ -18,13 +18,9 @@ using label_map = std::map<unsigned int, std::string>;
 
     n_feat:    number of features
     feat_t:    type of features (default float)
-    label_id:  class label id (used with a label_dict)
 */
-template <std::size_t n_feat, typename feat_t = float>
+template <typename feat_t, std::size_t n_feat>
 struct cls_sample {
-
-    // counter of class ids. used during parsing, after that stores number of classes
-    static unsigned int         max_label_id = 0;
 
     // array of features
     std::array<feat_t, n_feat>  _features;
@@ -37,13 +33,13 @@ struct cls_sample {
     // default: all features and class_id initialized to zero
     cls_sample()
         :   _features{0},
-            _label_id{0},
+            _label_id{0}
     {
     }
 
 
     // brace initializer list
-    cls_sample(std::array<feat_t> features, unsigned int label_id)
+    cls_sample(std::array<feat_t, n_feat> features, unsigned int label_id)
         :   _features{features},
             _label_id{label_id}
     {
