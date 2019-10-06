@@ -45,27 +45,27 @@ struct cls_sample {
 
 
     // for ease of use of vector of samples like a matrix
-    feat_t & operator [](std::size_t index){
+    inline feat_t & operator [](std::size_t index){
         return _features.at(index);
     }
 
 
     // access (get or set) a feature
-    feat_t & feat(std::size_t index)
+    inline feat_t & feat(std::size_t index)
     {
         return _features.at(index);
     }
 
 
     // access (get or set) label id
-    unsigned int & label_id()
+    inline unsigned int & label_id()
     {
         return _label_id;
     }
 
 
     // get class label as a string (decode using dict)
-    std::string label(const label_map & dict)
+    inline std::string label_str(const label_map & dict)
     {
         return dict.at(_label_id);
     }
