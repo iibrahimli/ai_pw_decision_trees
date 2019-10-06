@@ -52,6 +52,12 @@ public:
 
         while(std::getline(infile, line)){
 
+            if(line_n == 0 && ignore_first_col){
+                ++line_n;
+                line_ss.clear();
+                continue;
+            }
+
             line_ss.str(line);
 
             // parse features
@@ -74,7 +80,7 @@ public:
             
             line_ss >> label;
 
-            // add new label if its not in the seen labels set
+            // add new label if its not in the seen labels map
             if(label_to_id.find(label) == label_to_id.end()){
                 label_id = max_label_id;
                 dict[max_label_id] = label;
@@ -85,6 +91,7 @@ public:
                 label_id = label_to_id[label];
             }
             
+            // add sample to dataset, etc
             dataset.emplace_back(feats, label_id);
             ++line_n;
             line_ss.clear();
