@@ -19,8 +19,13 @@ template <typename T>
 std::ostream & operator << (std::ostream & out, std::vector<T> vec){
     
     out << "[ ";
-    for(auto i = 0; i < vec.size(); ++i)
-        out << vec[i] << ", ";
+    for(auto i = 0ul; i < vec.size(); ++i){
+        out << vec[i];
+        if(i != vec.size() - 1)
+            out << ", ";
+        else
+            out << " ";
+    }
     out << "]";
     
     return out;
