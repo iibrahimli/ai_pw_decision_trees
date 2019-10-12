@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+#include <iomanip>
 #include <string>
 #include <array>
 #include <map>
@@ -45,7 +47,15 @@ struct cls_sample {
 
 
     // for ease of use of vector of samples like a matrix
-    inline feat_t & operator [](std::size_t index){
+    inline feat_t & operator [](std::size_t index)
+    {
+        return _features.at(index);
+    }
+
+
+    // for ease of use of vector of samples like a matrix
+    inline const feat_t & operator [](std::size_t index) const
+    {
         return _features.at(index);
     }
 
@@ -74,3 +84,13 @@ struct cls_sample {
 
 
 } // namespace dt
+
+
+
+template <typename feat_t, std::size_t n_feat>
+std::ostream & operator<< (std::ostream & out, dt::cls_sample<feat_t, n_feat> & sample){
+    for(auto i = 0lu; i < n_feat; ++i){
+        out << std::fixed << std::setw(6) << std::setprecision(2) << sample[i];
+    }
+    out << std::fixed << std::setw(12) << sample.label_id();
+}
