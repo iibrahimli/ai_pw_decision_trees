@@ -7,19 +7,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
-set(DTREE_SOURCES
-        src/dtree.cpp
-)
-
 set(TARGET_EXEC main)
 
-add_library(${PROJECT_NAME} SHARED ${DTREE_SOURCES})
-
 add_executable(${TARGET_EXEC} ${PROJECT_SOURCE_DIR}/src/main.cpp)
-
-target_link_libraries(${TARGET_EXEC} dtree)
-
-add_dependencies(${TARGET_EXEC} dtree)
 
 # use OpenMP if available
 find_package(OpenMP)
