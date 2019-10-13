@@ -67,7 +67,14 @@ struct cls_sample {
     }
 
 
-    // access (get or set) label id
+    // access (get ) label id
+    inline const unsigned int & label_id() const
+    {
+        return _label_id;
+    }
+
+
+    // access (set) label id
     inline unsigned int & label_id()
     {
         return _label_id;
