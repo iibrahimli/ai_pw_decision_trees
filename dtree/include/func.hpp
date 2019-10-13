@@ -52,7 +52,7 @@ std::ostream & operator << (std::ostream & out, std::vector<dt::cls_sample<feat_
     number of labels for a dataset (max_label_id + 1)
 */
 template <typename feat_t, std::size_t n_feat>
-unsigned int num_labels(std::vector<dt::cls_sample<feat_t, n_feat>> & dataset){
+unsigned int num_labels(const std::vector<dt::cls_sample<feat_t, n_feat>> & dataset){
     
     unsigned int num_lbl = 0;
 
@@ -70,7 +70,7 @@ unsigned int num_labels(std::vector<dt::cls_sample<feat_t, n_feat>> & dataset){
     ASSUMING THE GROUP IDS ARE CONTIGUOUS & START FROM 0
 */
 template <typename feat_t, std::size_t n_feat>
-unsigned int num_groups(std::vector<dt::cls_sample<feat_t, n_feat>> & dataset, std::size_t i){
+unsigned int num_groups(const std::vector<dt::cls_sample<feat_t, n_feat>> & dataset, std::size_t i){
     
     unsigned int num_grp = 0;
 
@@ -87,7 +87,7 @@ unsigned int num_groups(std::vector<dt::cls_sample<feat_t, n_feat>> & dataset, s
     returns a vector of number of samples belonging to each label
 */
 template <typename feat_t, std::size_t n_feat>
-std::vector<unsigned int> num_per_label(std::vector<dt::cls_sample<feat_t, n_feat>> & dataset){
+std::vector<unsigned int> num_per_label(const std::vector<dt::cls_sample<feat_t, n_feat>> & dataset){
     
     unsigned int num_lbl = num_labels(dataset);
     std::vector<unsigned int> lbl_count(num_lbl, 0);
@@ -104,7 +104,7 @@ std::vector<unsigned int> num_per_label(std::vector<dt::cls_sample<feat_t, n_fea
     returns a vector of number of samples belonging to each group
 */
 template <typename feat_t, std::size_t n_feat>
-std::vector<unsigned int> num_per_group(std::vector<dt::cls_sample<feat_t, n_feat>> & dataset, std::size_t i_feat){
+std::vector<unsigned int> num_per_group(const std::vector<dt::cls_sample<feat_t, n_feat>> & dataset, std::size_t i_feat){
     
     unsigned int num_grp = num_groups(dataset, i_feat);
     std::vector<unsigned int> grp_count(num_grp, 0);
@@ -114,6 +114,25 @@ std::vector<unsigned int> num_per_group(std::vector<dt::cls_sample<feat_t, n_fea
     }
 
     return grp_count;
+}
+
+
+/*
+    majority of labels
+*/
+template <typename feat_t, std::size_t n_feat>
+std::tuple<std::size_t, float> majority_label(const std::vector<dt::cls_sample<feat_t, n_feat>> & dataset){
+    auto          npl      = num_per_label(dataset);
+    std::size_t   ml_index = 0;
+
+    for(auto i = 0lu; i < npl.size(); ++i){
+        if(npl[i] > npl[ml_index])
+            ml_index = i;
+    }
+
+    float ratio = (float) npl[ml_index] / dataset.size();
+
+    return {ml_index, ratio};
 }
 
 
