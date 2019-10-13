@@ -137,6 +137,24 @@ std::tuple<std::size_t, float> majority_label(const std::vector<dt::cls_sample<f
 
 
 /*
+    get group as a separate dataset
+*/
+template <typename feat_t, std::size_t n_feat>
+std::vector<dt::cls_sample<feat_t, n_feat>>
+get_group_as_ds(const std::vector<dt::cls_sample<feat_t, n_feat>> & dataset, std::size_t i_feat, std::size_t group){
+    
+    std::vector<dt::cls_sample<feat_t, n_feat>> grp_ds;
+
+    std::copy_if(dataset.cbegin(), dataset.cend(), std::back_inserter(grp_ds),
+                [i_feat, group](const dt::cls_sample<feat_t, n_feat> & smpl){
+                    return smpl[i_feat] == group;
+                } );
+
+    return grp_ds;
+}
+
+
+/*
     Shannon entropy of a dataset
 */
 template <typename feat_t, std::size_t n_feat>
@@ -162,14 +180,9 @@ float dataset_entropy(std::vector<dt::cls_sample<feat_t, n_feat>> & dataset){
     Shannon entropy of a group
 */
 template <typename feat_t, std::size_t n_feat>
-float group_entropy(std::vector<dt::cls_sample<feat_t, n_feat>> & dataset, std::size_t i_feat, std::size_t group){
+float group_entropy(const std::vector<dt::cls_sample<feat_t, n_feat>> & dataset, std::size_t i_feat, std::size_t group){
     
-    std::vector<dt::cls_sample<feat_t, n_feat>> grp_ds;
-
-    std::copy_if(dataset.begin(), dataset.end(), std::back_inserter(grp_ds),
-                [i_feat, group](dt::cls_sample<feat_t, n_feat> & smpl){
-                    return smpl[i_feat] == group;
-                } );
+    auto grp_ds = get_group_as_ds(dataset, i_feat, group);
 
     float h = dataset_entropy(grp_ds);
     
