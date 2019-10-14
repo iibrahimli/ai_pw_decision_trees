@@ -18,25 +18,28 @@ enum node_type {
 struct decision_tree_node {
 
     node_type                           type;         // type of node
-    std::size_t                         feat_id;      // index of feature to consider
-    std::size_t                         group_id;     // group in i_feat to consider
-    std::size_t                         pred;         // prediction (class_id) if it is a LEAF node
-    std::vector<decision_tree_node *>   branches;     // branches corresponding to each group
+    std::size_t                         feat_id;      // [BRANCH] index of feature to consider
+    std::size_t                         group_id;     //          group in i_feat to consider
+    std::size_t                         pred;         // [LEAF]   prediction (class_id) if it is a LEAF node
+    std::vector<decision_tree_node *>   branches;     // [BRANCH] branches corresponding to each group
+    std::size_t                         depth;        // depth of node in tree
 
 
     decision_tree_node()
         :   type     {LEAF},
             feat_id  {0},
             group_id {0},
-            pred     {0}
+            pred     {0},
+            depth    {0}
     {}
 
 
-    decision_tree_node(node_type tp, std::size_t feat_i = 0, std::size_t group_i = 0, std::size_t prediction = 0)
+    decision_tree_node(node_type tp, std::size_t feat_i = 0, std::size_t group_i = 0, std::size_t prediction = 0, std::size_t depth = 0)
         :   type     {tp},
             feat_id  {feat_i},
             group_id {group_i},
-            pred     {prediction}
+            pred     {prediction},
+            depth    {depth}
     {}
 
 };
@@ -52,60 +55,51 @@ private:
     // number of groups for all features (assumend to be the same)
     std::size_t          n_groups;
 
-    // stopping condition threshold
-    float                sc_threshold;
+    // minimum samples (stopping condition)
+     std::size_t         min_samples;
+
+    // max depth (stopping condition)
+    std::size_t          max_depth;
 
 
 
     /*
-        is it time to stop?
-        evaluates stopping condition on a GROUP (give it a group NOT the whole dataset)
-    */
-    template <typename feat_t, std::size_t n_feat>
-    float eval_sc(const std::vector<cls_sample<feat_t, n_feat>> & dataset){
-        
-        auto [mj_label, ratio] = majority_label(dataset);
-        
-        return ratio;
-    }
-
-
-    /*
-        ??? split and add nodes ???
+        split and add nodes
     */
     template <typename feat_t, std::size_t n_feat>
     void split(decision_tree_node * cur_node, const std::vector<cls_sample<feat_t, n_feat>> & dataset){
 
-        // add branches for each group (case)
-        for(auto grp_id = 0; grp_id < n_groups; ++grp_id){
+        auto best_feature = get_best_feature(dataset);
 
-            auto best_feature = get_best_feature(dataset);
+        // check stopping condition
+        if(cur_node->depth > max_depth || dataset.size() <= min_samples){
+            // time to stop
 
-            auto grp_ds = get_group_as_ds(dataset, best_feature, grp_id);
-            
-            // check stopping condition
-            if(eval_sc(grp_ds) > sc_threshold){
-                // time to stop
+            auto [ml, _] = majority_label(dataset);
 
-                auto [ml, _] = majority_label(grp_ds);
+            // make this node a leaf
+            cur_node->type = LEAF;
+            cur_node->pred = ml;
+        }
+        else{
 
-                // make this node a leaf
-                cur_node->type     = LEAF;
-                cur_node->feat_id  = features[current_feature_idx];
-                cur_node->group_id = grp_id;
-                cur_node->pred     = ml;
+            // this node is a branch
+            cur_node->type = BRANCH;
+
+            // add child nodes for each group
+            for(int g = 0; g < n_groups; ++g){
+                cur_node->branches.emplace_back(new decision_tree_node(
+                    LEAF,
+                    best_feature,
+                    g,
+                    0,
+                    cur_node->depth + 1
+                ));
             }
-            else{
 
-                // add child nodes for each group
-                for(int g = 0; g < n_groups; ++g){
-                    cur_node->branches.emplace_back(new decision_tree_node())
-                }
-
-                // split child nodes
-                for(auto nd : cur_node->branches)
-                    split(nd);
-            }
+            // split child nodes
+            for(auto nd : cur_node->branches)
+                split(nd, get_group_as_ds(dataset, nd->feat_id, nd->group_id));
         }
     }
 
@@ -117,10 +111,11 @@ public:
         threshold: stopping condition threshold
                    default sc is (#majority_label / #group_size) > threshold
     */
-    decision_tree(float threshold = 0.95)
+    decision_tree(std::size_t max_depth = 5, std::size_t min_samples = 3)
         :   root         {nullptr},
             n_groups     {0},
-            sc_threshold {threshold}
+            min_samples  {min_samples},
+            max_depth    {max_depth}
     {}
 
 
@@ -154,10 +149,9 @@ public:
         // --- SPLITTING ---
 
         root = new decision_tree_node(BRANCH);
-        auto cur_node = root;
 
         // recursively split nodes until stopping condition is met
-        split(cur_node, ds);
+        split(root, ds);
 
     }
 
@@ -168,6 +162,16 @@ public:
     template <typename feat_t, std::size_t n_feat>
     std::size_t predict(const cls_sample<feat_t, n_feat> & sample){
 
+        auto         cur_node = root;
+        std::size_t  feat;
+        std::size_t  grp;
+
+        while(cur_node->type != LEAF){
+            feat = cur_node->feat_id;
+            cur_node = cur_node->branches[sample[feat]];
+        }
+
+        return cur_node->pred;
     }
 
 
@@ -177,7 +181,20 @@ public:
     template <typename feat_t, std::size_t n_feat>
     void evaluate(const std::vector<cls_sample<feat_t, n_feat>> & dataset){
 
+        std::vector<std::size_t> gt;
+        std::vector<std::size_t> pred;
+        int correct_pred = 0;
 
+        for(int i = 0; i < dataset.size(); ++i){
+            gt.emplace_back(dataset[i].label_id());
+            pred.emplace_back(predict(dataset[i]));
+
+            if(gt[i] == pred[i]) ++correct_pred;
+        }
+
+        std::cout << std::fixed << std::left << std::setw(25) << "test samples: " << std::setw(5) << dataset.size() << std::endl;
+        std::cout << std::fixed << std::left << std::setw(25) << "correct predictions: " << std::setw(5) << correct_pred << std::endl;
+        std::cout << std::fixed << std::left << std::setw(25) << "accuracy: " << std::setw(5) << std::setprecision(2) << (float) correct_pred / dataset.size() << std::endl;
 
     }
 
