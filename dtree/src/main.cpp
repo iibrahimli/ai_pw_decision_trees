@@ -36,45 +36,38 @@ int main(int argc, char * argv[]){
 
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
 
-    // print class labels
-    cout << "Classes:" << endl;
-    for(auto [id, name] : id_to_label) cout << "  " << id << ": " << name << endl;
-
     auto seconds = (int) std::round(duration / 1000000);
     auto millis  = (float) (duration % 1000000) / 1000;
 
-    cout << endl << dataset.size() << " samples parsed in " << fixed << setprecision(2) << seconds << " s " << millis << " ms" << endl;
-
-
-    // DEBUG
+    cout << "parsed " << dataset.size() << " samples in " << fixed << setprecision(2) << seconds << " s " << millis << " ms" << endl;
     cout << endl;
-    cout << "# of labels: " << num_labels(dataset) << endl;
-    cout << "# of samples per label: " << num_per_label(dataset) << endl;
-    cout << "dataset entropy: " << dataset_entropy(dataset) << endl;
-
 
     // group the features
     auto ds = discretize_dataset(dataset, N_GROUPS);
 
-    cout << "entropy of group 0 of attribute 0: " << group_entropy(ds, 0, 0) << endl;
-    cout << "entropy of group 1 of attribute 0: " << group_entropy(ds, 0, 1) << endl;
-    cout << "entropy of group 2 of attribute 0: " << group_entropy(ds, 0, 2) << endl;
-
-    cout << "discriminative power of attribute 0: " << disc(ds, 0) << endl;
-    cout << "discriminative power of attribute 1: " << disc(ds, 1) << endl;
-    cout << "discriminative power of attribute 2: " << disc(ds, 2) << endl;
-    cout << "discriminative power of attribute 3: " << disc(ds, 3) << endl;
-
     // split dataset into training and testing
-    auto [train_ds, test_ds] = split_dataset(ds, 0.8, true);
+    auto [train_ds, test_ds] = split_dataset(ds, 0.39, true);
+
+    cout << "training samples: " << train_ds.size() << endl;
+    cout << "test samples:     " << test_ds.size() << endl;
+    cout << endl;
 
     // build decision tree
-    decision_tree tree;
+    decision_tree tree(2, 2);
+
+    t1 = std::chrono::high_resolution_clock::now();
+
     tree.fit(train_ds);
 
-    // evaluate decision tree
-    auto res = tree.predict(test_ds[0]);
-    cout << "predicted: " << res << "  ground truth: " << test_ds[0].label_id() << endl;
+    t2 = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+    seconds = (int) std::round(duration / 1000000);
+    millis  = (float) (duration % 1000000) / 1000;
+
+    cout << "fit on " << train_ds.size() << " samples in " << fixed << setprecision(2) << seconds << " s " << millis << " ms" << endl;
+    cout << endl;
+
+    tree.evaluate(test_ds);
 
     return 0;
 }
