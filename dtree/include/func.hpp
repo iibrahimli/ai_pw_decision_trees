@@ -215,7 +215,7 @@ float disc(const std::vector<dt::cls_sample<feat_t, n_feat>> & dataset, std::siz
 
 
 /*
-    get id of the feature with most discriminative power
+    get id of the feature with the highest discriminative power
 */
 template <typename feat_t, std::size_t n_feat>
 std::size_t get_best_feature(const std::vector<dt::cls_sample<feat_t, n_feat>>& dataset){
