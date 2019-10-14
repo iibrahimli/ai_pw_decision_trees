@@ -194,7 +194,7 @@ float group_entropy(const std::vector<dt::cls_sample<feat_t, n_feat>> & dataset,
     Discriminative power of attribute i_feat
 */
 template <typename feat_t, std::size_t n_feat>
-float disc(std::vector<dt::cls_sample<feat_t, n_feat>> & dataset, std::size_t i_feat){
+float disc(const std::vector<dt::cls_sample<feat_t, n_feat>> & dataset, std::size_t i_feat){
     
     // UNNECESSARY ???
     // auto ds = sort_dataset(dataset, i_feat);
@@ -211,6 +211,25 @@ float disc(std::vector<dt::cls_sample<feat_t, n_feat>> & dataset, std::size_t i_
         dp -= (float) num_per_grp[grp] / ds.size() * group_entropy(ds, i_feat, grp);
     
     return dp;
+}
+
+
+/*
+    get id of the feature with most discriminative power
+*/
+template <typename feat_t, std::size_t n_feat>
+std::size_t get_best_feature(const std::vector<dt::cls_sample<feat_t, n_feat>>& dataset){
+    
+    std::size_t best_feat = 0;
+    float       best_disc = 0;
+
+    for(std::size_t bf = 0; bf < n_feat; ++bf){
+        if(disc(dataset, bf) > best_disc){
+            best_feat = bf;
+        }
+    }
+    
+    return best_feat;
 }
 
 
